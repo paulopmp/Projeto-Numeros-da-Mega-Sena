@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Sorteio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #6b7280;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .results-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 2px;
+        }
+
+        .drawn-numbers {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            min-height: 100px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f9f0ff 100%);
+            border-radius: 15px;
+            border: 2px dashed var(--primary);
+        }
+
+        .number-ball {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        .number-ball::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .number-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .number-item:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .number-item.drawn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .number-item.removed {
+            background: #f3f4f6;
+            color: #9ca3af;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f9f0ff 100%);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .number-ball {
+                width: 60px;
+                height: 60px;
+                font-size: 1.4rem;
+            }
+
+            .numbers-grid {
+                grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+                gap: 8px;
+            }
+
+            .number-item {
+                font-size: 1rem;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎲 Sistema de Sorteio</h1>
+            <p>Sorteie números de 1 a 60 de forma aleatória e divertida</p>
+        </div>
+
+        <div class="content">
+            <div class="controls">
+                <button class="btn btn-primary" id="drawBtn">
+                    Sortear 6 Números
+                </button>
+                <button class="btn btn-secondary" id="resetBtn">
+                    Reiniciar
+                </button>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Números Sorteados</h2>
+                <div class="drawn-numbers" id="drawnNumbers">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>Clique em "Sortear 6 Números" para começar</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Números Disponíveis</h2>
+                <div class="numbers-grid" id="numbersGrid"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalNumbers">60</div>
+                    <div class="stat-label">Total de Números</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="drawnCount">0</div>
+                    <div class="stat-label">Sorteados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="remainingCount">60</div>
+                    <div class="stat-label">Restantes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LotterySystem {
+            constructor() {
+                this.allNumbers = Array.from({ length: 60 }, (_, i) => String(i + 1));
+                this.availableNumbers = [...this.allNumbers];
+                this.drawnNumbers = [];
+                this.init();
+            }
+
+            init() {
+                this.renderNumbersGrid();
+                this.updateStats();
+                this.attachEventListeners();
+            }
+
+            attachEventListeners() {
+                document.getElementById('drawBtn').addEventListener('click', () => this.draw());
+                document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+            }
+
+            draw() {
+                if (this.availableNumbers.length < 6) {
+                    alert('Não há números suficientes para sortear!');
+                    return;
+                }
+
+                const btn = document.getElementById('drawBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Sorteando...';
+
+                setTimeout(() => {
+                    const drawn = [];
+                    const tempAvailable = [...this.availableNumbers];
+
+                    for (let i = 0; i < 6; i++) {
+                        const randomIndex = Math.floor(Math.random() * tempAvailable.length);
+                        const number = tempAvailable[randomIndex];
+                        drawn.push(number);
+                        tempAvailable.splice(randomIndex, 1);
+                    }
+
+                    this.drawnNumbers = [...this.drawnNumbers, ...drawn];
+                    this.availableNumbers = this.availableNumbers.filter(n => !drawn.includes(n));
+
+                    this.renderDrawnNumbers(drawn);
+                    this.renderNumbersGrid();
+                    this.updateStats();
+
+                    btn.disabled = false;
+                    btn.innerHTML = 'Sortear 6 Números';
+                }, 1000);
+            }
+
+            renderDrawnNumbers(numbers) {
+                const container = document.getElementById('drawnNumbers');
+                
+                if (this.drawnNumbers.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎯</div>
+                            <p>Clique em "Sortear 6 Números" para começar</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                this.drawnNumbers.forEach((num, index) => {
+                    const ball = document.createElement('div');
+                    ball.className = 'number-ball';
+                    ball.textContent = num;
+                    ball.style.animationDelay = `${index * 0.1}s`;
+                    container.appendChild(ball);
+                });
+            }
+
+            renderNumbersGrid() {
+                const grid = document.getElementById('numbersGrid');
+                grid.innerHTML = '';
+
+                this.allNumbers.forEach(num => {
+                    const item = document.createElement('div');
+                    item.className = 'number-item';
+                    item.textContent = num;
+
+                    if (this.drawnNumbers.includes(num)) {
+                        item.classList.add('drawn');
+                    } else if (!this.availableNumbers.includes(num)) {
+                        item.classList.add('removed');
+                    }
+
+                    grid.appendChild(item);
+                });
+            }
+
+            updateStats() {
+                document.getElementById('totalNumbers').textContent = this.allNumbers.length;
+                document.getElementById('drawnCount').textContent = this.drawnNumbers.length;
+                document.getElementById('remainingCount').textContent = this.availableNumbers.length;
+            }
+
+            reset() {
+                this.availableNumbers = [...this.allNumbers];
+                this.drawnNumbers = [];
+                this.renderDrawnNumbers([]);
+                this.renderNumbersGrid();
+                this.updateStats();
+            }
+        }
+
+        // Inicializar o sistema
+        const lottery = new LotterySystem();
+    </script>
+</body>
+</html>
